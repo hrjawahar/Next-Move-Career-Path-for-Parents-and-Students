@@ -15,7 +15,7 @@
   <div class="flex items-center justify-between gap-2 mb-3">
     <div class="text-xs text-gray-600 px-2 py-1 bg-white border rounded">
       <span data-i18n="pilot"></span>
-      <span class="ml-2 text-gray-400">v1.5</span>
+      <span class="ml-2 text-gray-400">v1.6</span>
     </div>
 
     <div class="flex items-center gap-2">
@@ -101,6 +101,14 @@
       </select>
     </div>
 
+    <!-- College dropdown (optional) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <select id="collegeFilter" class="w-full border p-2 rounded bg-white">
+        <option value="" data-i18n="collegePlaceholder"></option>
+      </select>
+      <div class="hidden md:block"></div>
+    </div>
+
     <div class="flex gap-2">
       <button type="button" onclick="toggleDecision(true)"
         class="w-full bg-purple-600 text-white py-2 rounded hover:opacity-95"
@@ -124,13 +132,6 @@
        class="underline hover:text-gray-800"
        href="https://docs.google.com/forms/d/1EWr-LBGX4SCwA6HnqIxiIx6zDP2Cum9ZgC8yxR8B5wU/viewform"
        data-i18n="feedback"></a>
-    <!-- College filter (optional) -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-  <select id="collegeFilter" class="w-full border p-2 rounded bg-white">
-    <option value="" data-i18n="collegePlaceholder"></option>
-  </select>
-  <div class="hidden md:block"></div>
-</div>
   </div>
 
 </div>
@@ -140,14 +141,13 @@
    GLOBALS (must be first)
 -------------------------- */
 const $ = (id) => document.getElementById(id);
-  let collegeNameList = [];
-
 // Use var to avoid "before initialization" issues with inline onclick
 var currentMode = null;
 
 let LANG = "en";
 let colleges = [];
 let districtList = [];
+let collegeNameList = [];
 let autoTimer = null;
 
 /* -------------------------
@@ -184,11 +184,6 @@ function setStatus(msg, kind="info"){
 -------------------------- */
 const translations = {
   en: {
-    // EN
-collegePlaceholder: "College (optional)",
-
-// TA
-collegePlaceholder: "கல்லூரி (விருப்பம்)",
     pilot: "TN Pilot",
     title: "MyCareerReflection – TN Decision Engine",
     subtitle: "10th / 12th • Marks + Interest → suggestions",
@@ -206,6 +201,8 @@ collegePlaceholder: "கல்லூரி (விருப்பம்)",
     interestPlaceholder: "Interest",
     districtPlaceholder: "District (optional)",
     budgetPlaceholder: "Budget (optional)",
+    collegePlaceholder: "College (optional)",
+
     budget_low: "Low",
     budget_mid: "Medium",
     budget_open: "Open",
@@ -256,6 +253,8 @@ collegePlaceholder: "கல்லூரி (விருப்பம்)",
     interestPlaceholder: "விருப்பம்",
     districtPlaceholder: "மாவட்டம் (விருப்பம்)",
     budgetPlaceholder: "செலவு (விருப்பம்)",
+    collegePlaceholder: "கல்லூரி (விருப்பம்)",
+
     budget_low: "குறைவு",
     budget_mid: "மிதம்",
     budget_open: "பரவாயில்லை",
@@ -310,27 +309,7 @@ function applyLanguage(lang){
   });
 
   rebuildDistrictOptions(true);
-  function rebuildCollegeOptions(keepSelection){
-  const sel = $("collegeFilter");
-  if(!sel) return;
-
-  const current = keepSelection ? sel.value : "";
-
-  sel.innerHTML = "";
-  const opt0 = document.createElement("option");
-  opt0.value = "";
-  opt0.textContent = translations[LANG].collegePlaceholder;
-  sel.appendChild(opt0);
-
-  for(const nm of collegeNameList){
-    const opt = document.createElement("option");
-    opt.value = nm;
-    opt.textContent = nm;
-    sel.appendChild(opt);
-  }
-
-  if(keepSelection && collegeNameList.includes(current)) sel.value = current;
-}
+  rebuildCollegeOptions(true);
 }
 
 $("lang").addEventListener("change", function(){
@@ -338,7 +317,6 @@ $("lang").addEventListener("change", function(){
 });
 
 applyLanguage("en");
-  const collegePick = ($("collegeFilter")?.value || "").trim();
 
 /* -------------------------
    MODE
@@ -384,24 +362,26 @@ async function loadCollegeData(){
 
     if(!Array.isArray(data)) throw new Error("Invalid JSON: expected array");
     colleges = data;
-    collegeNameList = Array.from(new Set(
-  colleges.map(c => (c.name || c.collegeName || c.institution || "").trim()).filter(Boolean)
-)).sort((a,b)=> a.localeCompare(b));
-
-rebuildCollegeOptions(false);
 
     districtList = Array.from(new Set(
       colleges.map(c => (c.district || "").trim()).filter(Boolean)
     )).sort((a,b)=> a.localeCompare(b));
 
-    rebuildDistrictOptions(false);
-    setStatus(`${translations[LANG].loadOk} (${colleges.length})`, "ok");
+    collegeNameList = Array.from(new Set(
+      colleges.map(c => (c.name || c.collegeName || c.institution || "").trim()).filter(Boolean)
+    )).sort((a,b)=> a.localeCompare(b));
 
+    rebuildDistrictOptions(false);
+    rebuildCollegeOptions(false);
+
+    setStatus(`${translations[LANG].loadOk} (${colleges.length})`, "ok");
     scheduleAutoFetch();
   }catch(e){
     colleges = [];
     districtList = [];
+    collegeNameList = [];
     rebuildDistrictOptions(false);
+    rebuildCollegeOptions(false);
     setStatus(translations[LANG].loadErr, "error");
   }
 }
@@ -426,6 +406,26 @@ function rebuildDistrictOptions(keepSelection){
   if(keepSelection && districtList.includes(current)) sel.value = current;
 }
 
+function rebuildCollegeOptions(keepSelection){
+  const sel = $("collegeFilter");
+  const current = keepSelection ? sel.value : "";
+
+  sel.innerHTML = "";
+  const opt0 = document.createElement("option");
+  opt0.value = "";
+  opt0.textContent = translations[LANG].collegePlaceholder;
+  sel.appendChild(opt0);
+
+  for(const nm of collegeNameList){
+    const opt = document.createElement("option");
+    opt.value = nm;
+    opt.textContent = nm;
+    sel.appendChild(opt);
+  }
+
+  if(keepSelection && collegeNameList.includes(current)) sel.value = current;
+}
+
 loadCollegeData();
 
 /* -------------------------
@@ -445,7 +445,7 @@ function scheduleAutoFetch(){
   autoTimer = setTimeout(autoFetchSuggestions, 250);
 }
 
-["marks","interest","district","budget"].forEach(id=>{
+["marks","interest","district","budget","collegeFilter"].forEach(id=>{
   const el = $(id);
   if(!el) return;
   el.addEventListener("input", scheduleAutoFetch);
@@ -460,7 +460,7 @@ function toggleDecision(fromButton){
   const interestKey = $("interest").value;
   const district = $("district").value.trim();
   const budget = $("budget").value;
-  const collegePick = ($("collegeFilter")?.value || "").trim();
+  const collegePick = $("collegeFilter").value.trim();
 
   if(!currentMode){
     $("results").innerHTML = `<div class="text-sm text-gray-600 bg-white border p-3 rounded">
@@ -484,26 +484,19 @@ function toggleDecision(fromButton){
   const band = getBand(marks);
   const wanted = new Set((interestTags[interestKey] || []).map(normTag));
 
-  const pool = district
+  let pool = district
     ? colleges.filter(c => (c.district || "").trim() === district)
     : colleges;
-  let pool = district
-  ? colleges.filter(c => (c.district || "").trim() === district)
-  : colleges;
 
-if(collegePick){
-  pool = pool.filter(c => ((c.name || c.collegeName || c.institution || "").trim()) === collegePick);
-}
+  if(collegePick){
+    pool = pool.filter(c => ((c.name || c.collegeName || c.institution || "").trim()) === collegePick);
+  }
 
-  // Score all, but mark program matches (can be empty)
   const allScored = pool
     .map(college => scoreCollege(college, wanted, band, budget))
     .sort((a,b) => b.score - a.score);
 
-  // Strict list: only those with tag matches
   const strict = allScored.filter(x => x.matchPrograms.length > 0).slice(0, 12);
-
-  // Fallback: if strict is empty, show top by tier+band (still useful list)
   const used = (strict.length > 0) ? strict : allScored.slice(0, 12);
   const note = (strict.length === 0);
 
@@ -655,6 +648,7 @@ function resetForm(){
   $("interest").value = "";
   $("district").value = "";
   $("budget").value = "";
+  $("collegeFilter").value = "";
   $("results").innerHTML = "";
 }
 </script>
