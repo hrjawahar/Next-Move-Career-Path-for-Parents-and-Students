@@ -15,7 +15,7 @@
   <div class="flex items-center justify-between gap-2 mb-3">
     <div class="text-xs text-gray-600 px-2 py-1 bg-white border rounded">
       <span data-i18n="pilot"></span>
-      <span class="ml-2 text-gray-400">v1.4</span>
+      <span class="ml-2 text-gray-400">v1.5</span>
     </div>
 
     <div class="flex items-center gap-2">
@@ -102,7 +102,7 @@
     </div>
 
     <div class="flex gap-2">
-      <button type="button" onclick="toggleDecision()"
+      <button type="button" onclick="toggleDecision(true)"
         class="w-full bg-purple-600 text-white py-2 rounded hover:opacity-95"
         data-i18n="needSuggestion"></button>
 
@@ -134,7 +134,7 @@
 -------------------------- */
 const $ = (id) => document.getElementById(id);
 
-// Use var to avoid "before initialization" issues in some inline onclick scenarios
+// Use var to avoid "before initialization" issues with inline onclick
 var currentMode = null;
 
 let LANG = "en";
@@ -152,7 +152,8 @@ function normTag(s){
     .replace(/\s+/g,"")
     .replace(/[^a-z0-9]/g,"");
 }
-  function escapeHtml(str){
+
+function escapeHtml(str){
   return String(str)
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
@@ -178,24 +179,32 @@ const translations = {
     pilot: "TN Pilot",
     title: "MyCareerReflection – TN Decision Engine",
     subtitle: "10th / 12th • Marks + Interest → suggestions",
+
     disclaimerTitle: "Disclaimer",
     disclaimer: "Indicative suggestions only. Final admission depends on official counselling, category reservation, cut-off variations and institutional policies. Please verify with official sources.",
+
     mode10: "10th",
     mode12: "12th",
+
     studentName: "Student Name",
     schoolName: "School / College",
     totalMarks: "Total Marks",
+
     interestPlaceholder: "Interest",
     districtPlaceholder: "District (optional)",
     budgetPlaceholder: "Budget (optional)",
     budget_low: "Low",
     budget_mid: "Medium",
     budget_open: "Open",
+
     needSuggestion: "Need Suggestion?",
     reset: "Reset",
     tip: "Auto-suggest works after selecting mode + entering marks + choosing interest.",
+
     alertNeed: "Enter marks & interest",
     noMatches: "No close matches in dataset for this input.",
+    fallbackNote: "No exact program match for this interest in current dataset. Showing best available colleges based on district + tier + marks band.",
+
     loadOk: "College data loaded",
     loadErr: "Could not load college data. Check /data/tn-colleges.json path and deployment.",
     scoreLabel: "Score",
@@ -204,6 +213,7 @@ const translations = {
     website: "Website",
     feedback: "Feedback",
     footerNote: "Help improve this tool by sharing 30-second feedback.",
+
     interest_ai: "AI",
     interest_datascience: "Data Science",
     interest_cse: "Computer Science",
@@ -219,24 +229,32 @@ const translations = {
     pilot: "தமிழ்நாடு முயற்சி",
     title: "MyCareerReflection – தமிழ்நாடு வழிகாட்டு அமைப்பு",
     subtitle: "10ம் / 12ம் • மதிப்பெண் + விருப்பம் → பரிந்துரைகள்",
+
     disclaimerTitle: "அறிவிப்பு",
     disclaimer: "இது வழிகாட்டும் பரிந்துரைகள் மட்டும். இறுதி சேர்க்கை அதிகாரப்பூர்வ ஆலோசனை, இடஒதுக்கீடு, கட்டுப்பெண் மாறுபாடுகள் மற்றும் கல்வி நிறுவன விதிமுறைகளுக்கு உட்பட்டது. அதிகாரப்பூர்வ தகவல்களுடன் உறுதிப்படுத்தவும்.",
+
     mode10: "10ம் வகுப்பு",
     mode12: "12ம் வகுப்பு",
+
     studentName: "மாணவர் பெயர்",
     schoolName: "பள்ளி / கல்லூரி",
     totalMarks: "மொத்த மதிப்பெண்கள்",
+
     interestPlaceholder: "விருப்பம்",
     districtPlaceholder: "மாவட்டம் (விருப்பம்)",
     budgetPlaceholder: "செலவு (விருப்பம்)",
     budget_low: "குறைவு",
     budget_mid: "மிதம்",
     budget_open: "பரவாயில்லை",
+
     needSuggestion: "பரிந்துரை வேண்டுமா?",
     reset: "மீட்டமை",
     tip: "முறை தேர்வு + மதிப்பெண் + விருப்பம் கொடுத்த பிறகு தானாக பரிந்துரை வரும்.",
+
     alertNeed: "மதிப்பெண்களும் விருப்பமும் கொடுக்கவும்",
     noMatches: "இந்த உள்ளீட்டிற்கு தரவுத்தொகுப்பில் பொருத்தம் இல்லை.",
+    fallbackNote: "இந்த விருப்பத்திற்கான துல்லியமான பாடப் பொருத்தம் தரவிலில்லை. மாவட்டம் + நிலை (tier) + மதிப்பெண் அடிப்படையில் சிறந்த கிடைக்கக்கூடிய கல்லூரிகள் காட்டப்படுகின்றன.",
+
     loadOk: "கல்லூரி தரவு ஏற்றப்பட்டது",
     loadErr: "கல்லூரி தரவை ஏற்ற முடியவில்லை. /data/tn-colleges.json பாதை மற்றும் deployment சரிபார்க்கவும்.",
     scoreLabel: "மதிப்பு",
@@ -245,6 +263,7 @@ const translations = {
     website: "இணையதளம்",
     feedback: "கருத்து",
     footerNote: "இந்த கருவியை மேம்படுத்த 30 விநாடி கருத்தை பகிரவும்.",
+
     interest_ai: "செயற்கை நுண்ணறிவு (AI)",
     interest_datascience: "தரவு அறிவியல்",
     interest_cse: "கணினி அறிவியல்",
@@ -370,7 +389,7 @@ function rebuildDistrictOptions(keepSelection){
 loadCollegeData();
 
 /* -------------------------
-   AUTOFETCH (auto-run)
+   AUTOFETCH
 -------------------------- */
 function autoFetchSuggestions(){
   if (!currentMode) return;
@@ -378,8 +397,7 @@ function autoFetchSuggestions(){
   const interestKey = $("interest").value;
   if (!marks || !interestKey) return;
   if (!colleges || !colleges.length) return;
-
-  toggleDecision();
+  toggleDecision(false);
 }
 
 function scheduleAutoFetch(){
@@ -397,7 +415,7 @@ function scheduleAutoFetch(){
 /* -------------------------
    DECISION ENGINE
 -------------------------- */
-function toggleDecision(){
+function toggleDecision(fromButton){
   const marks = Number($("marks").value);
   const interestKey = $("interest").value;
   const district = $("district").value.trim();
@@ -411,7 +429,7 @@ function toggleDecision(){
   }
 
   if(!marks || !interestKey){
-    // avoid spamming alerts during autofetch; only alert if user pressed button
+    if(fromButton) alert(translations[LANG].alertNeed);
     return;
   }
 
@@ -423,19 +441,25 @@ function toggleDecision(){
   }
 
   const band = getBand(marks);
- const wanted = new Set((interestTags[interestKey] || []).map(normTag));
+  const wanted = new Set((interestTags[interestKey] || []).map(normTag));
 
   const pool = district
     ? colleges.filter(c => (c.district || "").trim() === district)
     : colleges;
 
-  const scored = pool
+  // Score all, but mark program matches (can be empty)
+  const allScored = pool
     .map(college => scoreCollege(college, wanted, band, budget))
-    .filter(x => x.matchPrograms.length > 0)
-    .sort((a,b) => b.score - a.score)
-    .slice(0, 12);
+    .sort((a,b) => b.score - a.score);
 
-  renderResults(scored);
+  // Strict list: only those with tag matches
+  const strict = allScored.filter(x => x.matchPrograms.length > 0).slice(0, 12);
+
+  // Fallback: if strict is empty, show top by tier+band (still useful list)
+  const used = (strict.length > 0) ? strict : allScored.slice(0, 12);
+  const note = (strict.length === 0);
+
+  renderResults(used, note);
 }
 
 function getBand(marks){
@@ -455,7 +479,6 @@ function getBand(marks){
 }
 
 function scoreCollege(college, wantedTagsSet, band, budget){
-  // normalize wanted tags once
   const wanted = new Set(Array.from(wantedTagsSet).map(normTag));
 
   const programMatches = [];
@@ -488,10 +511,11 @@ function scoreCollege(college, wantedTagsSet, band, budget){
 
   return { ...college, score, matchPrograms, tier };
 }
+
 /* -------------------------
    RENDER
 -------------------------- */
-function renderResults(list){
+function renderResults(list, showFallbackNote){
   const container = $("results");
   container.innerHTML = "";
 
@@ -515,6 +539,13 @@ function renderResults(list){
   `;
   container.appendChild(header);
 
+  if(showFallbackNote){
+    const note = document.createElement("div");
+    note.className = "text-xs text-gray-700 bg-white border p-3 rounded";
+    note.textContent = translations[LANG].fallbackNote;
+    container.appendChild(note);
+  }
+
   if(list.length === 0){
     const empty = document.createElement("div");
     empty.className = "text-sm text-gray-600 bg-white border p-3 rounded";
@@ -536,6 +567,10 @@ function renderResults(list){
       (typeof item.institution === "string" && item.institution.trim()) ? item.institution.trim() :
       "College";
 
+    const programPills = (item.matchPrograms && item.matchPrograms.length)
+      ? item.matchPrograms.map(p => `<span class="px-2 py-1 bg-gray-100 rounded text-[11px]">${escapeHtml(p)}</span>`).join("")
+      : `<span class="px-2 py-1 bg-gray-50 border rounded text-[11px] text-gray-500">${escapeHtml(LANG==="ta" ? "தற்போது பொருத்தம் இல்லை" : "No tag match yet")}</span>`;
+
     div.innerHTML = `
       <div class="flex items-start justify-between gap-2">
         <div class="font-semibold">${escapeHtml(collegeName)}</div>
@@ -549,7 +584,7 @@ function renderResults(list){
       <div class="text-xs mt-2">
         <div class="text-[11px] text-gray-500 mb-1">${escapeHtml(translations[LANG].programLabel)}:</div>
         <div class="flex flex-wrap gap-2">
-          ${item.matchPrograms.map(p => `<span class="px-2 py-1 bg-gray-100 rounded text-[11px]">${escapeHtml(p)}</span>`).join("")}
+          ${programPills}
         </div>
       </div>
 
