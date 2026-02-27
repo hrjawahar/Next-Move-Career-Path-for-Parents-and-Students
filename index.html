@@ -145,7 +145,14 @@ let autoTimer = null;
 /* -------------------------
    HELPERS
 -------------------------- */
-function escapeHtml(str){
+function normTag(s){
+  return String(s || "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g,"")
+    .replace(/[^a-z0-9]/g,"");
+}
+  function escapeHtml(str){
   return String(str)
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
@@ -416,7 +423,7 @@ function toggleDecision(){
   }
 
   const band = getBand(marks);
-  const wanted = new Set(interestTags[interestKey] || []);
+ const wanted = new Set((interestTags[interestKey] || []).map(normTag));
 
   const pool = district
     ? colleges.filter(c => (c.district || "").trim() === district)
@@ -448,10 +455,13 @@ function getBand(marks){
 }
 
 function scoreCollege(college, wantedTagsSet, band, budget){
-  const programMatches = [];
+  // normalize wanted tags once
+  const wanted = new Set(Array.from(wantedTagsSet).map(normTag));
 
+  const programMatches = [];
   for(const p of (college.programs || [])){
-    const overlap = (p.tags || []).reduce((acc,t)=> acc + (wantedTagsSet.has(t) ? 1 : 0), 0);
+    const tags = (p.tags || []).map(normTag);
+    const overlap = tags.reduce((acc,t)=> acc + (wanted.has(t) ? 1 : 0), 0);
     if(overlap > 0){
       programMatches.push({ program: p.name || "Program", overlap });
     }
@@ -467,7 +477,7 @@ function scoreCollege(college, wantedTagsSet, band, budget){
 
   let budgetBonus = 0;
   if(budget && typeof college.feeBand === "string"){
-    if(college.feeBand === budget) budgetBonus = 2;
+    if(String(college.feeBand).toLowerCase() === String(budget).toLowerCase()) budgetBonus = 2;
     else if(budget === "open") budgetBonus = 1;
   }
 
@@ -478,7 +488,6 @@ function scoreCollege(college, wantedTagsSet, band, budget){
 
   return { ...college, score, matchPrograms, tier };
 }
-
 /* -------------------------
    RENDER
 -------------------------- */
