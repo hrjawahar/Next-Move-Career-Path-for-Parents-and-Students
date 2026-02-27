@@ -124,6 +124,13 @@
        class="underline hover:text-gray-800"
        href="https://docs.google.com/forms/d/1EWr-LBGX4SCwA6HnqIxiIx6zDP2Cum9ZgC8yxR8B5wU/viewform"
        data-i18n="feedback"></a>
+    <!-- College filter (optional) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+  <select id="collegeFilter" class="w-full border p-2 rounded bg-white">
+    <option value="" data-i18n="collegePlaceholder"></option>
+  </select>
+  <div class="hidden md:block"></div>
+</div>
   </div>
 
 </div>
@@ -133,6 +140,7 @@
    GLOBALS (must be first)
 -------------------------- */
 const $ = (id) => document.getElementById(id);
+  let collegeNameList = [];
 
 // Use var to avoid "before initialization" issues with inline onclick
 var currentMode = null;
@@ -176,6 +184,11 @@ function setStatus(msg, kind="info"){
 -------------------------- */
 const translations = {
   en: {
+    // EN
+collegePlaceholder: "College (optional)",
+
+// TA
+collegePlaceholder: "கல்லூரி (விருப்பம்)",
     pilot: "TN Pilot",
     title: "MyCareerReflection – TN Decision Engine",
     subtitle: "10th / 12th • Marks + Interest → suggestions",
@@ -297,6 +310,27 @@ function applyLanguage(lang){
   });
 
   rebuildDistrictOptions(true);
+  function rebuildCollegeOptions(keepSelection){
+  const sel = $("collegeFilter");
+  if(!sel) return;
+
+  const current = keepSelection ? sel.value : "";
+
+  sel.innerHTML = "";
+  const opt0 = document.createElement("option");
+  opt0.value = "";
+  opt0.textContent = translations[LANG].collegePlaceholder;
+  sel.appendChild(opt0);
+
+  for(const nm of collegeNameList){
+    const opt = document.createElement("option");
+    opt.value = nm;
+    opt.textContent = nm;
+    sel.appendChild(opt);
+  }
+
+  if(keepSelection && collegeNameList.includes(current)) sel.value = current;
+}
 }
 
 $("lang").addEventListener("change", function(){
@@ -304,6 +338,7 @@ $("lang").addEventListener("change", function(){
 });
 
 applyLanguage("en");
+  const collegePick = ($("collegeFilter")?.value || "").trim();
 
 /* -------------------------
    MODE
@@ -349,6 +384,11 @@ async function loadCollegeData(){
 
     if(!Array.isArray(data)) throw new Error("Invalid JSON: expected array");
     colleges = data;
+    collegeNameList = Array.from(new Set(
+  colleges.map(c => (c.name || c.collegeName || c.institution || "").trim()).filter(Boolean)
+)).sort((a,b)=> a.localeCompare(b));
+
+rebuildCollegeOptions(false);
 
     districtList = Array.from(new Set(
       colleges.map(c => (c.district || "").trim()).filter(Boolean)
@@ -420,6 +460,7 @@ function toggleDecision(fromButton){
   const interestKey = $("interest").value;
   const district = $("district").value.trim();
   const budget = $("budget").value;
+  const collegePick = ($("collegeFilter")?.value || "").trim();
 
   if(!currentMode){
     $("results").innerHTML = `<div class="text-sm text-gray-600 bg-white border p-3 rounded">
@@ -446,6 +487,13 @@ function toggleDecision(fromButton){
   const pool = district
     ? colleges.filter(c => (c.district || "").trim() === district)
     : colleges;
+  let pool = district
+  ? colleges.filter(c => (c.district || "").trim() === district)
+  : colleges;
+
+if(collegePick){
+  pool = pool.filter(c => ((c.name || c.collegeName || c.institution || "").trim()) === collegePick);
+}
 
   // Score all, but mark program matches (can be empty)
   const allScored = pool
